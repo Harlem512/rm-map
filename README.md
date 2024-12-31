@@ -1,5 +1,9 @@
 # Slippy Map Tilenames for Rusted Moss
 
+You probably want [this branch instead](https://github.com/Harlem512/rm-map/tree/version-2).
+
+# (Legacy) Version 1
+
 <a href="https://www.rustedmossgame.com/">Rusted Moss</a>'s map, rendered and sliced into <a href="https://en.wikipedia.org/wiki/Tiled_web_map">tiles</a> for your enjoyment.
 
 Uses a <a href="https://github.com/commenthol/gdal2tiles-leaflet">fork</a> of `gdal2tiles.py` to generate the tiles.
