@@ -24,7 +24,7 @@ global.thebus.camera.y = 0
 global.thebus.camera.delta = []
 
 global.thebus.stop = {}
-global.thebus.stop.i = 0
+global.thebus.stop.i = 1041
 global.thebus.stop.scale = 1
 global.thebus.stops = undefined
 
@@ -41,17 +41,21 @@ global.thebus.parallax.dy = []
 
 global.thebus.data = {}
 
-global.thebus.analysis = true
+global.thebus.analysis = false
 global.thebus.dump = false
 global.thebus.replace_parallax = false
 global.thebus.quickboot = false
+global.rmml.log("test")
 
 global.max_w = 0
 global.max_h = 0
 
 self.depth = -99999
 
-surface_resize(application_surface_get(), global.game_width * 4, global.game_height * 4)
+-- surface_resize(application_surface_get(), global.game_width * 4, global.game_height * 4)
+
+-- true if the new renderer is active and we need to do other stuff :c
+global.thebus.new_render = true
 ```
 
 ## room_start
@@ -59,8 +63,8 @@ surface_resize(application_surface_get(), global.game_width * 4, global.game_hei
 ```sp
 self.depth = -99999
 global.speedrun_mode_ = true
-global.debug_ui_ = true
-global.debug_cursor_ = true
+-- global.debug_ui_ = true
+-- global.debug_cursor_ = true
 
 -- start the bus
 if global.thebus.quickboot {
@@ -98,9 +102,9 @@ if global.thebus.replace_parallax {
   }
 }
 -- kill death pits
--- with opit_generator {
---   instance_destroy(self)
--- }
+with opit_generator {
+  instance_destroy(self)
+}
 -- kill enemies
 with par_enemy {
   -- self.destroy_index = 10
@@ -108,9 +112,9 @@ with par_enemy {
   instance_destroy(self)
 }
 -- kill pickups
--- with par_pickup {
---   instance_destroy(self)
--- }
+with par_pickup {
+  instance_destroy(self)
+}
 -- kill munny
 with omunny {
   instance_destroy(self)
@@ -211,10 +215,21 @@ match global.thebus.driver.state {
     global.thebus.camera.dy = 0
 
     if global.thebus.stop.i >= array_length(global.thebus.stops) {
+      global.rmml.log("end?")
       global.rmml.log(json_stringify(global.thebus.data))
     }
 
     let d = global.thebus.stops[global.thebus.stop.i]
+
+    -- check for robin cool rooms (ruin the rendering)
+    let room_name = room_get_name(d[2])
+    global.rmml.log(room_name)
+    if string_pos("rrobin_alt", room_name) {
+      global.thebus.stop.i += 1
+      global.thebus.new_render = true
+      return
+    }
+
     --maxw
     -- 3944x268
     -- let d = [97,43]
@@ -230,9 +245,22 @@ match global.thebus.driver.state {
     global.map_draw_offset_y_ = 0
 
     global.thebus.stop.i += 1
+
+    -- exit
+    if (global.thebus.new_render) {
+      global.rmml.log("ew")
+      global.thebus.driver.state = 20
+      return
+    }
+
     -- screenshot
     if global.thebus.dump {
-      global.thebus.driver.state = 4
+      -- debug pull us out
+      if room_get() == rrender_test_2 {
+        global.thebus.driver.state = 2
+      } else {
+        global.thebus.driver.state = 4
+      }
     } else {
       global.thebus.driver.state = 2
     }
@@ -637,6 +665,10 @@ while i < array_length(global.thebus.parallax.layers) {
 ```sp
 if self.depth == 99999 {
   if global.thebus.driver.state == 3 and global.thebus.driver.cooldown <= 0 {
+    -- if global.thebus.new_render {
+    --   return
+    -- }
+
     if global.thebus.dump {
       global.thebus.driver.state = 0
     } else {
